@@ -1,0 +1,451 @@
+/* ═══════════════════════════════════════════════════════════════
+   style.css — WalletLink UI
+═══════════════════════════════════════════════════════════════ */
+
+/* ─────────────────────────────────────────────────────────────
+   ─ All colours, radii, and font references live here.
+   ─ Matches State.NETWORK_NAMES palette intent (warm = active).
+───────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Brand */
+  --fox:        #F6851B;
+  --fox-dark:   #E2761B;
+
+  /* Backgrounds */
+  --bg:         #0A0A0F;
+  --surface:    #13131A;
+  --surface2:   #1C1C27;
+
+  /* Borders */
+  --border:     rgba(246, 133, 27, 0.18);
+
+  /* Typography */
+  --text:       #F0EDE8;
+  --muted:      rgba(240, 237, 232, 0.45);
+
+  /* Semantic */
+  --success:    #1D9E75;
+  --danger:     #E24B4A;
+  --info:       #378ADD;
+
+  /* Radii */
+  --radius-sm:  8px;
+  --radius-md:  12px;
+  --radius-lg:  16px;
+  --radius-xl:  20px;
+  --radius-pill: 100px;
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   2. BASE
+───────────────────────────────────────────────────────────── */
+body {
+  font-family: 'Syne', sans-serif;
+  background: #06060A;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   3. APP SHELL
+───────────────────────────────────────────────────────────── */
+.app {
+  background: var(--bg);
+  color: var(--text);
+  width: 100%;
+  max-width: 480px;
+  min-height: 580px;
+  border-radius: var(--radius-xl);
+  border: 0.5px solid var(--border);
+  overflow: hidden;
+  position: relative;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  padding: 32px;
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   4. HEADER  (UI Update Layer — setNetwork writes here)
+───────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 36px;
+}
+
+/* Logo */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon { width: 32px; height: 32px; }
+
+.logo-text {
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--text);
+}
+
+/* Network badge — updated by UI.setNetwork() */
+.network-badge {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  border: 0.5px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s;
+}
+
+.network-badge.connected {
+  color: var(--fox);
+  border-color: rgba(246, 133, 27, 0.4);
+}
+
+/* Network dot — toggled .active by UI.setNetwork() */
+.network-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.network-dot.active {
+  background: var(--fox);
+  box-shadow: 0 0 6px var(--fox);
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   5. HERO / DISCONNECTED VIEW
+   ─ UI.showDisconnected() shows this block.
+   ─ UI.showInstallPrompt() mutates #heroSub and buttons.
+───────────────────────────────────────────────────────────── */
+.hero {
+  text-align: center;
+  padding: 24px 0 28px;
+}
+
+/* Fox icon wrap — UI.setConnectButtonLoading adds .pulse */
+.fox-wrap {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  background: var(--surface2);
+  border: 0.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.4s;
+}
+
+.fox-wrap.pulse::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(246, 133, 27, 0.3);
+  animation: pulseRing 2s ease-out infinite;
+}
+
+@keyframes pulseRing {
+  0%   { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.3); opacity: 0; }
+}
+
+.hero-title {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+/* #heroSub — mutated by UI.showInstallPrompt() */
+.hero-sub {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.6;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   6. BUTTONS  (Action Layer triggers)
+   ─ #connectBtn  → Actions.handleConnect
+   ─ #installBtn  → Actions.openInstall
+   ─ disconnect   → Actions.handleDisconnect
+───────────────────────────────────────────────────────────── */
+.btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  transition: all 0.25s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* Primary — Connect MetaMask */
+.btn-primary {
+  background: var(--fox);
+  color: #1a0a00;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--fox-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(246, 133, 27, 0.25);
+}
+
+.btn-primary:active:not(:disabled) { transform: translateY(0); }
+
+/* Secondary — Disconnect */
+.btn-secondary {
+  background: transparent;
+  color: var(--danger);
+  border: 0.5px solid rgba(226, 75, 74, 0.3);
+  margin-top: 10px;
+}
+
+.btn-secondary:hover {
+  background: rgba(226, 75, 74, 0.08);
+  border-color: var(--danger);
+}
+
+/* Install MetaMask */
+.btn-install {
+  background: var(--surface2);
+  color: var(--fox);
+  border: 1.5px solid var(--fox);
+  margin-top: 10px;
+}
+
+.btn-install:hover { background: rgba(246, 133, 27, 0.1); }
+
+
+/* ─────────────────────────────────────────────────────────────
+   7. CONNECTED VIEW — CARDS
+   ─ UI.showConnected() reveals #connectedView.
+───────────────────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.card-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+   8. CONNECTED VIEW — ADDRESS
+   ─ UI.setAddress() writes to #displayAddress.
+   ─ UI.setCopyButtonCopied() / resetCopyButton() toggle .copied.
+───────────────────────────────────────────────────────────── */
+.address-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* #displayAddress — written by UI.setAddress() */
+.address-text {
+  font-family: 'Space Mono', monospace;
+  font-size: 13px;
+  color: var(--text);
+  word-break: break-all;
+  flex: 1;
+  line-height: 1.5;
+}
+
+/* #copyBtn — toggled by UI.setCopyButtonCopied() / resetCopyButton() */
+.copy-btn {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  background: var(--surface2);
+  border: 0.5px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  color: var(--muted);
+}
+
+.copy-btn:hover  { border-color: var(--fox); color: var(--fox); }
+.copy-btn.copied { background: rgba(29,158,117,0.15); border-color: var(--success); color: var(--success); }
+
+
+/* ─────────────────────────────────────────────────────────────
+   9. CONNECTED VIEW — STATS
+   ─ #chainId written by UI.setNetwork().
+   ─ #balanceDisplay written by UI.setBalance().
+───────────────────────────────────────────────────────────── */
+.stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.stat {
+  background: var(--surface2);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+/* #chainId, #balanceDisplay */
+.stat-value {
+  font-family: 'Space Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+  10. EVENT LOG  (UI.addLog writes here)
+───────────────────────────────────────────────────────────── */
+.event-log {
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.log-item {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  padding: 5px 0;
+  border-bottom: 0.5px solid rgba(255, 255, 255, 0.04);
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.log-item:last-child { border-bottom: none; }
+.log-time { color: var(--muted); flex-shrink: 0; }
+.log-msg  { color: var(--text); opacity: 0.75; }
+
+/* Types set by UI.addLog(msg, type) */
+.log-msg.event-connect    { color: var(--success); opacity: 1; }
+.log-msg.event-disconnect { color: var(--danger);  opacity: 1; }
+.log-msg.event-account    { color: var(--info);    opacity: 1; }
+.log-msg.event-network    { color: var(--fox);     opacity: 1; }
+
+
+/* ─────────────────────────────────────────────────────────────
+  11. TOAST  (UI.showToast writes here)
+   ─ Classes: .show · .success · .error · .warn
+───────────────────────────────────────────────────────────── */
+.toast {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface2);
+  border: 0.5px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.toast.show    { opacity: 1; }
+.toast.success { border-color: var(--success); color: var(--success); }
+.toast.error   { border-color: var(--danger);  color: var(--danger); }
+.toast.warn    { border-color: var(--fox);     color: var(--fox); }
+
+
+/* ─────────────────────────────────────────────────────────────
+  12. SPINNER  (Action Layer — UI.setConnectButtonLoading injects)
+───────────────────────────────────────────────────────────── */
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(26, 10, 0, 0.3);
+  border-top-color: rgba(26, 10, 0, 0.9);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+
+/* ─────────────────────────────────────────────────────────────
+  13. UTILITIES
+───────────────────────────────────────────────────────────── */
+.hidden { display: none !important; }
+
+/* Applied by UI.showConnected() to #connectedView */
+.fade-in { animation: fadeIn 0.4s ease; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+/* ─────────────────────────────────────────────────────────────
+  14. SCROLLBAR  (#eventLog)
+───────────────────────────────────────────────────────────── */
+.event-log::-webkit-scrollbar       { width: 4px; }
+.event-log::-webkit-scrollbar-track { background: transparent; }
+.event-log::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
