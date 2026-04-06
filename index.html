@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MetaMask Wallet Connect</title>
+
+  <!--
+    ─────────────────────────────────────────────────────────────
+    UI UPDATE LAYER — stylesheet
+    Sections in style.css mirror LLD layers for traceability.
+    ─────────────────────────────────────────────────────────────
+  -->
+  <link rel="stylesheet" href="css/style.css" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap"
+    rel="stylesheet"
+  />
+</head>
+
+<body>
+  <div class="app" id="app">
+
+    <!--
+      ── UI UPDATE LAYER — Toast notification
+         Written by: UI.showToast(msg, type)
+         Classes toggled: .show · .success · .error · .warn
+    -->
+    <div class="toast" id="toast"></div>
+
+    <div class="content">
+
+      <!--
+        ── HEADER
+           #networkBadge → UI.setNetwork() toggles .connected
+           #networkDot   → UI.setNetwork() toggles .active
+           #networkName  → UI.setNetwork() writes label text
+      -->
+      <div class="header">
+        <div class="logo">
+          <svg class="logo-icon" viewBox="0 0 32 32" fill="none">
+            <rect width="32" height="32" rx="8" fill="#F6851B" opacity="0.15"/>
+            <path d="M26 8L18.5 13.5L19.9 10.2L26 8Z"   fill="#E2761B"/>
+            <path d="M6 8L13.4 13.6L12.1 10.2L6 8Z"     fill="#E4761B"/>
+            <path d="M23.3 21.5L21.2 24.8L25.5 26L26.8 21.6L23.3 21.5Z" fill="#E4761B"/>
+            <path d="M5.2 21.6L6.5 26L10.8 24.8L8.7 21.5L5.2 21.6Z"    fill="#E4761B"/>
+            <path d="M10.5 17.2L9.3 19L13.5 19.2L13.4 14.7L10.5 17.2Z"  fill="#E4761B"/>
+            <path d="M21.5 17.2L18.5 14.6L18.5 19.2L22.7 19L21.5 17.2Z" fill="#E4761B"/>
+            <path d="M10.8 24.8L13.2 23.5L11.1 21.6L10.8 24.8Z"         fill="#E4761B"/>
+            <path d="M18.8 23.5L21.2 24.8L20.9 21.6L18.8 23.5Z"         fill="#E4761B"/>
+          </svg>
+          <span class="logo-text">WalletLink</span>
+        </div>
+
+        <div class="network-badge" id="networkBadge">
+          <div class="network-dot" id="networkDot"></div>
+          <span id="networkName">Not connected</span>
+        </div>
+      </div>
+
+      <!-- ════════════════════════════════════════════════════════
+           DISCONNECTED VIEW
+           Shown by: UI.showDisconnected()
+           Hidden by: UI.showConnected()
+      ════════════════════════════════════════════════════════ -->
+      <div id="disconnectedView">
+
+        <div class="hero">
+          <!--
+            #foxWrap — UI.setConnectButtonLoading() adds .pulse
+                     — UI.resetConnectButton() removes .pulse
+          -->
+          <div class="fox-wrap" id="foxWrap">
+            <svg width="44" height="44" viewBox="0 0 200 200" fill="none">
+              <path d="M169 35L129 62L136 44Z"              fill="#E2761B"/>
+              <path d="M31 35L70.6 62.4L64 44Z"             fill="#E4761B"/>
+              <path d="M154 148L142.5 166L178 175.5L188 148.5Z" fill="#E4761B"/>
+              <path d="M12 148.5L22 175.5L57.5 166L46 148Z"    fill="#E4761B"/>
+              <path d="M55.5 96L44 113.5L79 115L77.8 77Z"      fill="#E4761B"/>
+              <path d="M144.5 96L122 76.5L121 115L156 113.5Z"  fill="#E4761B"/>
+              <path d="M57.5 166L77 156.5L60.2 148.5Z"         fill="#E4761B"/>
+              <path d="M123 156.5L142.5 166L139.8 148.5Z"      fill="#E4761B"/>
+            </svg>
+          </div>
+
+          <div class="hero-title">Connect your wallet</div>
+          <!--
+            #heroSub — mutated by UI.showInstallPrompt()
+                       when MetaMask is not detected
+          -->
+          <div class="hero-sub" id="heroSub">
+            Link your MetaMask wallet to get started. Your keys, your crypto.
+          </div>
+        </div>
+
+        <!--
+          ACTION LAYER — Connect button
+          onclick → Actions.handleConnect (bound in init IIFE)
+          Loading state injected by UI.setConnectButtonLoading()
+        -->
+        <button class="btn btn-primary" id="connectBtn" onclick="handleConnect()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" fill="currentColor"/>
+          </svg>
+          <span id="connectBtnText">Connect MetaMask</span>
+        </button>
+
+        <!--
+          ACTION LAYER — Install button
+          Shown by UI.showInstallPrompt() when MetaMask not found.
+          onclick → Actions.openInstall (bound in init IIFE)
+        -->
+        <button class="btn btn-install hidden" id="installBtn" onclick="openInstall()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z" fill="currentColor"/>
+          </svg>
+          Install MetaMask
+        </button>
+
+      </div><!-- /disconnectedView -->
+
+
+      <!-- ════════════════════════════════════════════════════════
+           CONNECTED VIEW
+           Shown by: UI.showConnected()
+           Hidden by: UI.showDisconnected()
+      ════════════════════════════════════════════════════════ -->
+      <div id="connectedView" class="hidden fade-in">
+
+        <!--
+          UI UPDATE LAYER — Address card
+          #displayAddress → UI.setAddress()
+          #copyBtn        → UI.setCopyButtonCopied() / resetCopyButton()
+        -->
+        <div class="card">
+          <div class="card-label">Wallet address</div>
+          <div class="address-box">
+            <span class="address-text" id="displayAddress">—</span>
+            <button
+              class="copy-btn"
+              id="copyBtn"
+              onclick="copyAddress()"
+              title="Copy full address"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!--
+          UI UPDATE LAYER — Stats
+          #chainId        → UI.setNetwork()
+          #balanceDisplay → UI.setBalance()
+        -->
+        <div class="stats-row">
+          <div class="stat">
+            <div class="stat-label">Chain ID</div>
+            <div class="stat-value" id="chainId">—</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Balance (ETH)</div>
+            <div class="stat-value" id="balanceDisplay">—</div>
+          </div>
+        </div>
+
+        <!--
+          UI UPDATE LAYER — Event log
+          #eventLog → UI.addLog(msg, type)
+          Row classes: event-connect · event-disconnect · event-account · event-network
+        -->
+        <div class="card" style="margin-top: 12px;">
+          <div class="card-label">Event log</div>
+          <div class="event-log" id="eventLog">
+            <div class="log-item">
+              <span class="log-time">--:--:--</span>
+              <span class="log-msg">Awaiting events…</span>
+            </div>
+          </div>
+        </div>
+
+        <!--
+          ACTION LAYER — Disconnect button
+          onclick → Actions.handleDisconnect (bound in init IIFE)
+        -->
+        <button class="btn btn-secondary" onclick="handleDisconnect()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+          </svg>
+          Disconnect
+        </button>
+
+      </div><!-- /connectedView -->
+
+    </div><!-- /content -->
+  </div><!-- /app -->
+
+  <!--
+    LIFECYCLE LAYER — wallet.js
+    Loads last so all DOM elements exist when init() IIFE runs.
+    init() exposes Actions to window (handleConnect, handleDisconnect,
+    copyAddress, openInstall) and attempts silent session restore.
+  -->
+  <script src="server/wallet.js"></script>
+
+</body>
+</html>
